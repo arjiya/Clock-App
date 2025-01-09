@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clock App</title>
+    <style>
+       body {
+    font-family: 'Poppins', sans-serif;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    color: #ffffff;
+}
+
+h1 {
+    font-size: 32px;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.clock, .timer, .countdown {
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+    margin-bottom: 20px;
+    text-align: center;
+    width: 90%;
+    max-width: 300px;
+}
+
+.time-display {
+    font-size: 48px;
+    font-weight: bold;
+    color: #61dafb;
+    text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease-in-out, color 0.3s ease-in-out;
+}
+
+.time-display:hover {
+    transform: scale(1.1);
+    color: #ffd700;
+}
+
+button, input {
+    margin: 5px;
+    padding: 12px 25px;
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease-in-out;
+}
+
+button {
+    background-color: #61dafb;
+    color: #282c34;
+}
+
+button:hover {
+    background-color: #21a1f1;
+    transform: translateY(-2px);
+}
+
+input {
+    background-color: #ffffff;
+    color: #282c34;
+    border: 2px solid #61dafb;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+input:focus {
+    outline: none;
+    border-color: #ffd700;
+    box-shadow: 0 0 10px #ffd700;
+}
+
+    </style>
+</head>
+<body>
+    <div class="clock">
+        <h1>Clock</h1>
+        <div class="time-display" id="current-time">00:00:00 AM</div>
+        <button id="toggle-format">Switch to 24-Hour Format</button>
+    </div>
+
+    <div class="timer">
+        <h1>Timer</h1>
+        <div class="time-display" id="timer-display">00:00:00</div>
+        <button id="start-timer">Start</button>
+        <button id="pause-timer">Pause</button>
+        <button id="stop-timer">Stop</button>
+    </div>
+
+    <div class="countdown">
+        <h1>Countdown</h1>
+        <input type="number" id="countdown-input" placeholder="Enter seconds (max 100000)">
+        <div class="time-display" id="countdown-display">00:00:00</div>
+        <button id="start-countdown">Start</button>
+        <button id="pause-countdown">Pause</button>
+        <button id="stop-countdown">Stop</button>
+    </div>
+
+    <script>
+        // Clock
+        const currentTimeDisplay = document.getElementById("current-time");
+        const toggleFormatBtn = document.getElementById("toggle-format");
+        let is24Hour = false;
+
+        function updateClock() {
+            const now = new Date();
+            let hours = now.getHours();
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const isAM = hours < 12;
+
+            if (!is24Hour) {
+                hours = hours % 12 || 12;
+                currentTimeDisplay.textContent = `${String(hours).padStart(2, '0')}:${minutes}:${seconds} ${isAM ? 'AM' : 'PM'}`;
+            } else {
+                currentTimeDisplay.textContent = `${String(hours).padStart(2, '0')}:${minutes}:${seconds}`;
+            }
+
+            currentTimeDisplay.style.transform = 'scale(1.2)';
+            setTimeout(() => {
+                currentTimeDisplay.style.transform = 'scale(1)';
+            }, 200);
+        }
+
+        toggleFormatBtn.addEventListener('click', () => {
+            is24Hour = !is24Hour;
+            toggleFormatBtn.textContent = is24Hour ? "Switch to 12-Hour Format" : "Switch to 24-Hour Format";
+            updateClock();
+        });
+
+        setInterval(updateClock, 1000);
+
+        // Timer
+        const timerDisplay = document.getElementById("timer-display");
+        let timerInterval = null;
+        let timerSeconds = 0;
+
+        document.getElementById("start-timer").addEventListener('click', () => {
+            if (timerInterval) return;
+            timerInterval = setInterval(() => {
+                timerSeconds++;
+                updateTimerDisplay(timerSeconds);
+            }, 1000);
+        });
+
+        document.getElementById("pause-timer").addEventListener('click', () => {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        });
+
+        document.getElementById("stop-timer").addEventListener('click', () => {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            timerSeconds = 0;
+            updateTimerDisplay(timerSeconds);
+        });
+
+        function updateTimerDisplay(seconds) {
+            const hours = String(Math.floor(seconds / 3600)).padStart(2, '0');
+            const minutes = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
+            const secs = String(seconds % 60).padStart(2, '0');
+            timerDisplay.textContent = `${hours}:${minutes}:${secs}`;
+        }
+
+        // Countdown
+        const countdownDisplay = document.getElementById("countdown-display");
+        const countdownInput = document.getElementById("countdown-input");
+        let countdownInterval = null;
+        let countdownSeconds = 0;
+
+        document.getElementById("start-countdown").addEventListener('click', () => {
+            const inputSeconds = Number(countdownInput.value);
+            if (inputSeconds <= 0 || inputSeconds > 100000 || isNaN(inputSeconds)) {
+                alert("Please enter a valid number of seconds (1-100000).");
+                return;
+            }
+            countdownSeconds = inputSeconds;
+            updateCountdownDisplay(countdownSeconds);
+
+            if (countdownInterval) clearInterval(countdownInterval);
+            countdownInterval = setInterval(() => {
+                countdownSeconds--;
+                if (countdownSeconds <= 0) {
+                    clearInterval(countdownInterval);
+                    countdownInterval = null;
+                    alert("Countdown Finished!");
+                }
+                updateCountdownDisplay(countdownSeconds);
+            }, 1000);
+        });
+
+        document.getElementById("pause-countdown").addEventListener('click', () => {
+            clearInterval(countdownInterval);
+            countdownInterval = null;
+        });
+
+        document.getElementById("stop-countdown").addEventListener('click', () => {
+            clearInterval(countdownInterval);
+            countdownInterval = null;
+            countdownSeconds = 0;
+            updateCountdownDisplay(countdownSeconds);
+        });
+
+        function updateCountdownDisplay(seconds) {
+            const hours = String(Math.floor(seconds / 3600)).padStart(2, '0');
+            const minutes = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
+            const secs = String(seconds % 60).padStart(2, '0');
+            countdownDisplay.textContent = `${hours}:${minutes}:${secs}`;
+        }
+    </script>
+</body>
+</html>
